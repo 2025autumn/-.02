@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>괴담출근 결제 화 기록</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f7f9fc;
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin-top: 40px;
+      font-size: 22px;
+    }
+    button {
+      font-style: italic;
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    #loginSection, #mainSection {
+      display: none;
+    }
+    .popup {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 85%;
+      max-width: 400px;
+      margin: 80px auto;
+      padding: 20px;
+    }
+    input {
+      padding: 8px;
+      width: 80%;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 8px auto;
+      width: 80%;
+      max-width: 400px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .delete-btn {
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 5px 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>괴담에 떨어져도 출근을 해야 하는구나<br>결제 화 기록</h1>
+  <button id="startBtn"><i>시작하기</i></button>
+
+  <div id="loginSection" class="popup">
+    <h2>암호 입력</h2>
+    <input type="password" id="password" maxlength="4" placeholder="4자리 숫자 입력">
+    <br>
+    <button onclick="checkPassword()">확인</button>
+  </div>
+
+  <div id="mainSection">
+    <div class="popup">
+      <h3>📖 기록 추가하기</h3>
+      <input type="text" id="nickname" placeholder="닉네임 입력">
+      <input type="text" id="chapter" placeholder="가장 최근에 결제한 화 예: 42화">
+      <br>
+      <button onclick="addRecord()">추가하기</button>
+    </div>
+
+    <h3>📜 기록 목록</h3>
+    <ul id="recordList"></ul>
+  </div>
+
+  <script>
+    const correctPassword = "1234";
+    let isAdmin = false;
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      document.getElementById("loginSection").style.display = "block";
+      document.getElementById("startBtn").style.display = "none";
+    });
+
+    function checkPassword() {
+      const input = document.getElementById("password").value;
+      if (input === correctPassword) {
+        isAdmin = true;
+        enterMain();
+      } else if (input.trim() === "") {
+        alert("암호를 입력해주세요.");
+      } else {
+        alert("암호가 틀렸습니다! 읽기 전용으로 입장합니다.");
+        isAdmin = false;
+        enterMain();
+      }
+    }
+
+    function enterMain() {
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("mainSection").style.display = "block";
+      loadRecords();
+    }
+
+    function addRecord() {
+      const nickname = document.getElementById("nickname").value.trim();
+      const chapter = document.getElementById("chapter").value.trim();
+      if (!nickname || !chapter) {
+        alert("닉네임과 화 정보를 모두 입력해주세요.");
+        return;
+      }
+      const record = { nickname, chapter };
+      const records = JSON.parse(localStorage.getItem("records") || "[]");
+      records.push(record);
+      localStorage.setItem("records", JSON.stringify(records));
+      document.getElementById("nickname").value = "";
+      document.getElementById("chapter").value = "";
+      loadRecords();
+    }
+
+    function deleteRecord(index) {
+      if (!isAdmin) {
+        alert("삭제 권한이 없습니다.");
+        return;
+      }
+      const records = JSON.parse(localStorage.getItem("records") || "[]");
+      records.splice(index, 1);
+      localStorage.setItem("records", JSON.stringify(records));
+      loadRecords();
+    }
+
+    function loadRecords() {
+      const list = document.getElementById("recordList");
+      list.innerHTML = "";
+      const records = JSON.parse(localStorage.getItem("records") || "[]");
+      records.forEach((record, i) => {
+        const li = document.createElement("li");
+        li.textContent = record.nickname + " — " + record.chapter;
+        if (isAdmin) {
+          const btn = document.createElement("button");
+          btn.textContent = "삭제";
+          btn.className = "delete-btn";
+          btn.onclick = () => deleteRecord(i);
+          btn.style.display = "inline-block";
+          li.appendChild(btn);
+        }
+        list.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
